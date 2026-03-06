@@ -970,7 +970,7 @@ footer{padding:2.5rem 3rem;border-top:1px solid var(--brd);display:flex;justify-
         </div>
         <div class="f-ok" id="fok">
           <span class="ck">✓</span>
-          <div class="msg">Opening email client...<br>I'll reply as soon as I can.</div>
+          <div class="msg">Message sent to my inbox!<br>I'll reply as soon as I can.</div>
         </div>
       </div>
     </div>
@@ -1070,15 +1070,47 @@ function switchTab(id,btn){
 }
 
 /* ═══ CONTACT FORM ═══ */
-function sendForm(){
+async function sendForm(){
   const n=document.getElementById('fn').value.trim();
   const e=document.getElementById('fe').value.trim();
   const s=document.getElementById('fs').value.trim();
   const m=document.getElementById('fm').value.trim();
-  if(!n||!e||!m){alert('Please fill in name, email, and message.');return;}
-  window.location.href=`mailto:himanshekhar03@gmail.com?subject=${encodeURIComponent(s||'Portfolio Enquiry – '+n)}&body=${encodeURIComponent('Name: '+n+'\nEmail: '+e+'\n\n'+m)}`;
-  document.getElementById('ffields').style.display='none';
-  document.getElementById('fok').style.display='block';
+  if(!n||!e||!m){alert('Please fill in name, email and message.');return;}
+
+  const btn=document.querySelector('.f-btn');
+  btn.textContent='Sending...';
+  btn.disabled=true;
+  btn.style.opacity='0.6';
+
+  try{
+    const res=await fetch('https://api.web3forms.com/submit',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({
+        access_key:'b8098e0d-1877-4800-aaaf-b62cac29f0b3',   
+        name:n,
+        email:e,
+        subject:s||'Portfolio enquiry from '+n,
+        message:m,
+        from_name:'Portfolio Contact Form',
+        replyto:e
+      })
+    });
+    const data=await res.json();
+    if(data.success){
+      document.getElementById('ffields').style.display='none';
+      document.getElementById('fok').style.display='block';
+      document.querySelector('.f-ok .msg').innerHTML=
+        'Message received! I\'ll reply to <strong>'+e+'</strong> soon.';
+    } else {
+      throw new Error(data.message||'Submit failed');
+    }
+  } catch(err){
+    btn.textContent='Send message →';
+    btn.disabled=false;
+    btn.style.opacity='1';
+    alert('Something went wrong: '+err.message+'\n\nAlternatively email me directly:\nhimanshekhar03@gmail.com');
+  }
 }
 
 /* ═══ DOWNLOAD CV ═══ */
